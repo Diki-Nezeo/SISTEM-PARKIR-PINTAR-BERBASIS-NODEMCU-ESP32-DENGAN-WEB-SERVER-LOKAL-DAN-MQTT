@@ -1,0 +1,282 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Parkiran Pintar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+  />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6; /* Tailwind gray-100 */
+    }
+    /* Popup animation */
+    .popup-fade-in {
+      animation: fadeInScale 0.3s ease forwards;
+    }
+    .popup-fade-out {
+      animation: fadeOutScale 0.3s ease forwards;
+    }
+    @keyframes fadeInScale {
+      0% {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    @keyframes fadeOutScale {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+    }
+    /* Slot select animation */
+    .slot-select-animate {
+      animation: slotSelectPulse 0.4s ease forwards;
+    }
+    @keyframes slotSelectPulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(252, 211, 77, 0.7);
+      }
+      50% {
+        box-shadow: 0 0 10px 6px rgba(252, 211, 77, 0.7);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(252, 211, 77, 0);
+      }
+    }
+    /* Exclamation icon above popup */
+    #popupExclamation {
+      position: absolute;
+      top: -40px; /* moved up from -28px to -40px */
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #facc15; /* yellow-400 */
+      color: #92400e; /* yellow-800 */
+      width: 56px;
+      height: 56px;
+      border-radius: 9999px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 32px;
+      font-weight: 700;
+      box-shadow: 0 0 10px 2px rgba(250, 204, 21, 0.7);
+      z-index: 60;
+      user-select: none;
+    }
+  </style>
+</head>
+<body class="flex flex-col bg-gray-100 h-full w-full relative">
+  <div class="flex flex-col bg-gray-900 text-white h-full w-full p-4">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-3">
+      <div>
+        <h1 class="font-extrabold text-[16px] leading-tight">Selamat Datang!</h1>
+        <p class="text-gray-300 text-[11px]">Di Parkiran Pintar</p>
+      </div>
+      <i class="fas fa-car text-white text-[16px]"></i>
+    </div>
+
+    <!-- Info cards -->
+    <div class="flex justify-between mb-3">
+      <div class="flex flex-col justify-center items-center text-center rounded-lg shadow-md w-[80px] h-[80px]" style="background: linear-gradient(135deg, #4ade80 0%, #22d3ee 100%);">
+        <p class="text-black font-semibold text-[16px] leading-none">28,5 °C</p>
+        <p class="text-black text-[10px] mt-0.5">Suhu</p>
+      </div>
+      <div class="flex flex-col justify-center items-center text-center rounded-lg shadow-md w-[80px] h-[80px]" style="background: linear-gradient(135deg, #22c55e 0%, #bef264 100%);">
+        <p class="text-black font-semibold text-[16px] leading-none">65.0 %</p>
+        <p class="text-black text-[10px] mt-0.5">Kelembapan</p>
+      </div>
+      <div class="flex flex-col justify-center items-center text-center rounded-lg shadow-md w-[80px] h-[80px]" style="background: linear-gradient(135deg,  #facc15 0%, #eab308 50%, #ca8a04 100%);">
+        <p class="text-black font-semibold text-[16px] leading-none">Redup</p>
+        <p class="text-black text-[10px] mt-0.5">Kondisi Cahaya</p>
+      </div>
+    </div>
+
+    <!-- Slot Parkir -->
+    <div class="font-extrabold text-[14px] mb-2 text-center">SLOT PARKIR</div>
+    <div class="flex justify-center space-x-6 mb-1">
+      <div id="slot1" class="w-[48px] h-[48px] rounded-md bg-green-600 shadow-md cursor-pointer"></div>
+      <div id="slot2" class="w-[48px] h-[48px] rounded-md bg-green-600 shadow-md cursor-pointer"></div>
+    </div>
+    <div class="flex justify-center space-x-6 text-white text-[12px] font-semibold -mt-1">
+      <span class="w-[48px] inline-block text-center leading-[48px]">Slot 1</span>
+      <span class="w-[48px] inline-block text-center leading-[48px]">Slot 2</span>
+    </div>
+
+    <!-- Denah Parkiran -->
+    <div class="font-extrabold text-[14px] mb-2 mt-4 text-center">DENAH PARKIRAN</div>
+    <div class="bg-white rounded-md flex-grow shadow-inner"></div>
+
+    <!-- Button -->
+    <button id="payBtn" class="mt-5 bg-green-600 text-white font-extrabold text-[14px] rounded-full py-3 w-full shadow-md disabled:bg-green-900 disabled:opacity-70 disabled:cursor-not-allowed">
+      Bayar
+    </button>
+  </div>
+
+  <!-- Popup Overlay -->
+  <div id="popupOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
+    <div id="popupContent" class="relative bg-white rounded-lg p-6 max-w-xs w-full text-center shadow-lg opacity-0 scale-90">
+      <div id="popupExclamation" class="hidden">!</div>
+      <h2 id="popupTitle" class="text-lg font-bold mb-4">Konfirmasi Pembayaran</h2>
+      <p id="popupText" class="mb-6 text-gray-700"></p>
+      <button id="confirmBtn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-full mr-4 hover:bg-green-700 transition">Konfirmasi</button>
+      <button id="cancelBtn" class="bg-gray-300 text-gray-700 font-bold py-2 px-6 rounded-full hover:bg-gray-400 transition">Batal</button>
+    </div>
+  </div>
+
+  <script>
+    const slot1 = document.getElementById('slot1');
+    const slot2 = document.getElementById('slot2');
+    const payBtn = document.getElementById('payBtn');
+    const popupOverlay = document.getElementById('popupOverlay');
+    const popupContent = document.getElementById('popupContent');
+    const popupExclamation = document.getElementById('popupExclamation');
+    const popupText = document.getElementById('popupText');
+    const popupTitle = document.getElementById('popupTitle');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    let selectedSlots = new Set();
+    let occupiedSlots = new Set();
+
+    function updatePayButton() {
+      if (selectedSlots.size > 0) {
+        payBtn.disabled = false;
+      } else {
+        payBtn.disabled = true;
+      }
+    }
+
+    function animateSlotSelect(slotElement) {
+      slotElement.classList.add('slot-select-animate');
+      slotElement.addEventListener('animationend', () => {
+        slotElement.classList.remove('slot-select-animate');
+      }, { once: true });
+    }
+
+    function toggleSlot(slotElement, slotName) {
+      if (occupiedSlots.has(slotName)) {
+        // Slot already occupied, do nothing
+        return;
+      }
+      if (selectedSlots.has(slotName)) {
+        // Deselect slot
+        selectedSlots.delete(slotName);
+        slotElement.classList.remove('bg-yellow-400');
+        slotElement.classList.add('bg-green-600');
+      } else {
+        // If another slot is already selected, do nothing
+        if (selectedSlots.size > 0) return;
+
+        // Select slot
+        selectedSlots.add(slotName);
+        slotElement.classList.remove('bg-green-600');
+        slotElement.classList.add('bg-yellow-400');
+        animateSlotSelect(slotElement);
+      }
+      updatePayButton();
+    }
+
+    function markSlotOccupied(slotElement, slotName) {
+      occupiedSlots.add(slotName);
+      slotElement.classList.remove('bg-green-600', 'bg-yellow-400');
+      slotElement.classList.add('bg-red-700', 'cursor-default');
+      slotElement.style.boxShadow = '0 0 8px 2px rgba(220,38,38,0.7)';
+    }
+
+    slot1.addEventListener('click', () => toggleSlot(slot1, 'Slot 1'));
+    slot2.addEventListener('click', () => toggleSlot(slot2, 'Slot 2'));
+
+    payBtn.disabled = true;
+
+    function showPopup() {
+      popupExclamation.classList.remove('hidden');
+      popupOverlay.classList.remove('hidden');
+      popupContent.classList.remove('popup-fade-out');
+      popupContent.classList.add('popup-fade-in');
+      popupContent.style.opacity = '1';
+      popupContent.style.transform = 'scale(1)';
+    }
+
+    function hidePopup() {
+      popupContent.classList.remove('popup-fade-in');
+      popupContent.classList.add('popup-fade-out');
+      popupContent.addEventListener('animationend', () => {
+        popupOverlay.classList.add('hidden');
+        popupContent.style.opacity = '0';
+        popupContent.style.transform = 'scale(0.9)';
+        popupExclamation.classList.add('hidden');
+      }, { once: true });
+    }
+
+    payBtn.addEventListener('click', () => {
+      if (selectedSlots.size > 0) {
+        popupTitle.textContent = 'Konfirmasi Pembayaran';
+        popupText.textContent = 'Apakah Anda yakin ingin membayar untuk ' + Array.from(selectedSlots).join(', ') + '?';
+        confirmBtn.classList.remove('hidden');
+        cancelBtn.textContent = 'Batal';
+        showPopup();
+      }
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      popupTitle.textContent = 'Pembayaran Berhasil';
+      popupText.textContent = 'Gerbang dibuka, Silahkan menuju ke tempat parkir anda!';
+      confirmBtn.classList.add('hidden');
+      cancelBtn.textContent = 'Tutup';
+
+      // Mark selected slots as occupied
+      selectedSlots.forEach(slot => {
+        if (slot === 'Slot 1') {
+          markSlotOccupied(slot1, slot);
+        } else if (slot === 'Slot 2') {
+          markSlotOccupied(slot2, slot);
+        }
+      });
+
+      selectedSlots.clear();
+      updatePayButton();
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      if (confirmBtn.classList.contains('hidden')) {
+        // Popup is in success state, just close and reset buttons
+        hidePopup();
+        confirmBtn.classList.remove('hidden');
+        cancelBtn.textContent = 'Batal';
+      } else {
+        hidePopup();
+      }
+    });
+
+    // Close popup on clicking outside the popup content
+    popupOverlay.addEventListener('click', (e) => {
+      if (e.target === popupOverlay) {
+        if (confirmBtn.classList.contains('hidden')) {
+          hidePopup();
+          confirmBtn.classList.remove('hidden');
+          cancelBtn.textContent = 'Batal';
+        } else {
+          hidePopup();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
